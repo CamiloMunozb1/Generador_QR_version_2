@@ -1,7 +1,7 @@
-from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
-import qrcode
 import sqlite3
+from PIL import Image, ImageDraw, ImageFont
+import qrcode
+
 
 class ConexionDB:
     def __init__(self, base_db):
@@ -16,46 +16,50 @@ class ConexionDB:
         print("Conexion cerrada.")
 
 class GeneradorQR:
-    def __init__(self, conxion):
-        self.conexion = conxion
-    def generar_qr(self, link_usuario, mensaje_qr):
-        try:
-            img = qrcode.make(link_usuario)
-            new_image = Image.new("RGB",(img.size[0],img.size[0]+50),"white")
-            font = ImageFont.load_default()
-            draw = ImageDraw.Draw(new_image)
-            text_size = draw.textbbox((0,0), mensaje_qr, font=font)
-            text_x = (img.size[0] - (text_size[2] - text_size[0])) // 2
-            text_y = img.size[1] + 10
-            draw.text((text_x, text_y), mensaje_qr, font=font, fill="black")
-            buffer = BytesIO()
-            new_image.save(buffer, format="PNG")
-            return buffer.getvalue()
-        except Exception as error:
-            print(f"Error al generar el codigo QR, volver a intentar: {error}.")
-            return None
 
-    def codigo_db(self):
+    def __init__(self, conexion):  
+        self.conexion = conexion
+
+    def generar_qr(self):
         try:
-            nombre_qr = str(input("Ingresa el titulo del QR: "))
-            nombre_usuario = str(input("Ingresa el nombre del usuario: "))
-            apellido_usuario = str(input("Ingresa el apellido del usuario: "))
-            link_usuario = str(input("Ingresa el link para generar el codigo QR: "))
-            mensaje_qr = str(input("Ingresa el mensaje para el codigo QR: "))
-            self.conexion.cursor.execute("SELECT usuario_id FROM usuario_qr WHERE nombre_usuario = ? AND apellido_usuario = ?", (nombre_usuario, apellido_usuario))
-            usuario = self.conexion.cursor.fetchone()
-            if usuario:
-                usuario_id = usuario[0] 
-                qr_binario = self.generar_qr(link_usuario, mensaje_qr)
-                if qr_binario:
-                    self.conexion.cursor.execute("INSERT INTO nombres_qr (nombre_qr,imagen_QR, usuario_id) VALUES (?,?,?)",(nombre_qr, qr_binario, usuario_id))
-                    self.conexion.conn.commit()
-                    print("QR guardado correctamente.")
-                else:
-                    print("Error al guardar el QR, no se guardara en la base de datos.")
-            else:
-                print("Usuario no encontrado.")
-        except ValueError:
-            print("Error al guardar el QR, volver a intentar.")
-        except sqlite3.Error as error:
-            print(f"Error al guardar el QR: {error}.")
+            link_usuario = input("Ingresa el link para generar el código QR: ")
+            mensaje_qr = input("Ingresa el mensaje que contendrá el QR: ")
+            nombre_archivo = input("Ingresa el nombre del archivo para guardar el QR: ")
+
+            self.conexion.cursor.execute("INSERT INTO nombres_qr (nombre_QR) VALUES (?)", (nombre_archivo,))
+            self.conexion.conn.commit()
+
+            # Generar QR
+            qr = qrcode.QRCode(box_size=10, border=4)
+            qr.add_data(link_usuario)
+            qr.make(fit=True)
+            img = qr.make_image(fill="black", back_color="white").convert("RGB")  # <- Convertir a RGB
+
+            # Crear nueva imagen con más espacio para el texto
+            new_image = Image.new("RGB", (img.width, img.height + 50), "white")
+
+            # Pegar la imagen QR en la nueva imagen
+            new_image.paste(img, (0, 0))
+
+            # Crear objeto de dibujo
+            draw = ImageDraw.Draw(new_image)
+
+            # Cargar una fuente por defecto
+            font = ImageFont.load_default()
+
+            # Dibujar el fondo del texto (opcional)
+            draw.rectangle([(0, img.height), (img.width, img.height + 50)], fill="white")
+
+            # Agregar el texto con la fuente correcta
+            draw.text((10, img.height + 10), mensaje_qr, font=font, fill="black")  
+
+            # Guardar la imagen
+            new_image.save(f"{nombre_archivo}.png")
+            print("Código QR generado correctamente.")
+
+        except Exception as error:
+            print(f"Error al generar el QR: {error}.")
+
+
+ruta = "C:/Users/POWER/QR_user.db"
+conexion = ConexionDB(ruta)
