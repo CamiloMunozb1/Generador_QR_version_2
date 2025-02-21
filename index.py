@@ -1,5 +1,6 @@
 from QR_funcion.generador_qr import ConexionDB, GeneradorQR
-#from QR_funcion.mostar_qr import ConexionDB, MostrarQR
+from QR_funcion.buscar_qr import ConexionDB, BuscarQR
+from QR_funcion.qr_guardado import ConexionDB, MostarQR
 
 
 ruta_db = "C:/Users/POWER/QR_user.db"
@@ -10,7 +11,8 @@ while True:
             Bienvenido al generador de QR
             1. Generar QR.
             2. Mostrar QR.
-            3. Salir
+            3. Mostar los nombres de los QR's en la base de datos.
+            4. Salir
         """)
     try:
         usuario = int(input("Ingresa una opcion: "))
@@ -18,8 +20,14 @@ while True:
             generar_qr = GeneradorQR(conexion)
             generar_qr.generar_qr()
         elif usuario == 2:
-            print("Proxima funcion.")
+            busqueda_qr = BuscarQR(conexion)
+            nombre_qr = busqueda_qr.busqueda_qr()
+            if nombre_qr:
+                busqueda_qr.abrir_qr(nombre_qr)
         elif usuario == 3:
+            mostrar_qr = MostarQR(conexion)
+            mostrar_qr.archivos_guardados()
+        elif usuario == 4:
             print("Saliendo del programa, gracias por visitarnos.")
             break
         else:
