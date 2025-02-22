@@ -28,7 +28,9 @@ Este es el repositorio de la **versión 2** del Generador de Códigos QR, una me
 - Librerías necesarias (definidas en `requirements.txt`)
 
 ## Mejoras respecto a la versión 1
-- [Lista de mejoras específicas según tu implementación]
+- Uso de programacion orientada a objetos
+- SQLite
+- Eliminacion de archivo.png 
 
 ## Contribuciones
 Si deseas contribuir, siéntete libre de hacer un **fork** del repositorio y enviar un **pull request** con mejoras o nuevas funcionalidades.
